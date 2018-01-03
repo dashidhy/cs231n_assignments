@@ -1,1 +1,1 @@
-This file has no use but a text of github.
+This file has no use but a test of github.
