@@ -35,6 +35,10 @@ def svm_loss_naive(W, X, y, reg):
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
+        # dW[:, j] and dW[:, y[i]] contributed to the loss function
+        d = X[i, :]/num_train
+        dW[:, j] += d
+        dW[:, y[i]] -= d
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
@@ -42,7 +46,9 @@ def svm_loss_naive(W, X, y, reg):
 
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
-
+    
+  #  Add gradient from regularization
+  dW += 2*reg*W
   #############################################################################
   # TODO:                                                                     #
   # Compute the gradient of the loss function and store it dW.                #
@@ -62,15 +68,18 @@ def svm_loss_vectorized(W, X, y, reg):
 
   Inputs and outputs are the same as svm_loss_naive.
   """
-  loss = 0.0
-  dW = np.zeros(W.shape) # initialize the gradient as zero
-
   #############################################################################
   # TODO:                                                                     #
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  S = X.dot(W)
+  sy = S[list(range(S.shape[0])), y]
+  S = (S-np.array([sy]).T)+1
+  S_0 = (S > 0)/num_train
+  loss = np.sum(S*S_0)-1+reg * np.sum(W * W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -85,7 +94,10 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  dW = 2*reg*W
+  ctr = S_0*(np.array([y]).T == np.arange(num_classes))
+  dW += np.dot(X.T, S_0)
+  dW -= np.dot(X.T*np.sum(S_0, 1), ctr)*num_train
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
