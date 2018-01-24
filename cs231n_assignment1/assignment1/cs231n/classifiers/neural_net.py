@@ -68,15 +68,20 @@ class TwoLayerNet(object):
     W1, b1 = self.params['W1'], self.params['b1']
     W2, b2 = self.params['W2'], self.params['b2']
     N, D = X.shape
+    C = b2.shape[0]
 
     # Compute the forward pass
-    scores = None
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    s1 = X.dot(W1)
+    f1 = s1+b1
+    f1_0 = f1 > 0
+    f1_relu = f1*f1_0
+    s2 = f1_relu.dot(W2)
+    scores = s2+b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -86,14 +91,15 @@ class TwoLayerNet(object):
       return scores
 
     # Compute the loss
-    loss = None
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    S = np.exp(scores)
+    S /= np.array([np.sum(S, 1)]).T
+    loss = reg*(np.sum(W1 * W1)+np.sum(W2 * W2))-np.sum(np.log(S[list(range(N)), y]))/N
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -105,7 +111,128 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    
+    ##### BP structures #########################################################
+    #############################################################################             
+    # Matrix multiplication:                                                    #
+    #                                                                           #
+    #                 <---- dA = dC.dot(B.T)                                    #
+    #               A -----------                                               #
+    #                            -                                              #
+    #                             -                 <---- dC = ...              #
+    #                              --> C = A.dot(B) ----------->                #      
+    #                             -                                             #
+    #                            -                                              #
+    #               B -----------                                               #
+    #                 <---- dB = A.T.dot(dC)                                    #
+    #                                                                           #
+    #############################################################################
+    # Bias plus (including broadcast):                                          #
+    #                                                                           #
+    #                      <-- dS = df                                          #                            
+    #        S = X.dot(W) -----------                                           #                                         
+    #                                 -                                         #
+    #                                  -            <-- df = ...                # 
+    #                                   --> f = S+b ----------->                #
+    #                                  -                                        #
+    #                                 -                                         #
+    #                    b -----------                                          #
+    #                      <-- db = np.sum(df, 0)                               #
+    #                                                                           #
+    #############################################################################
+    # ReLU:                                                                     #
+    #                                                                           #
+    #               <-- df = (f > 0)*df_relu      <-- df_relu = ...             #
+    #             f -----------> f_reku = ReLU(f) ----------->                  #
+    #                                                                           #
+    #############################################################################
+    # Softmax loss:                                                             #
+    #                                                                           #
+    # The gradient of Softmax loss is a little bit hard to compute. It may be-  #
+    # come easier to compute it by decomposing the process to several basic     #
+    # structures.                                                               #
+    #___________________________________________________________________________#
+    # 1. Exponent                                                               #
+    #                                                                           #
+    #                 <-- df = Se*dSe             <-- dSe = ...                 #
+    #               f -----------> Se = np.exp(f) ----------->                  #
+    #___________________________________________________________________________#
+    # 2. Normalization through the 1st dimention                                #
+    #                                                                           #
+    # The normalization process can be further decomposed into several basic    #
+    # computations.                                                             #
+    #                                                                           #
+    #      <-- dSe = E*dS                                        <--dS = ...    #
+    #   Se -------------------------------------------> S = Se*E ---------->    #                            -
+    #     -                                        -                            #
+    #      -                                      -                             #
+    #       - <-- dSe = dD.dot(C.T)              - <-- dE = Se*dS               #
+    #        -                                  -                               #
+    #         -         <-- dD = -(1/(D*D))*dE -                                #
+    #          --> D = Se.dot(C) -----------> E = 1/D                           #
+    #         -                                                                 #
+    #        -                                                                  #
+    #       -                                                                   #
+    #      -                                                                    #
+    #     -                                                                     #
+    #   C = np.ones(Se.shape[1], Se.shape[1])                                   #
+    #                                                                           #
+    # Then we can merge the computation to a relatively simple form:            #
+    #                                                                           #
+    #                dSe = (1/D)*dS-((1/(D*D))*Se*dS).dot(C.T)                  #
+    #___________________________________________________________________________#
+    # 3. Logarithm                                                              #
+    #                                                                           #
+    #                <-- dS = (1/S)*dSl          <-- dSl = ...                  #
+    #              S -----------> Sl = np.log(S) ----------->                   #
+    #___________________________________________________________________________#
+    # 4. Choose the scores of correct categories and then compute the loss      #
+    #                                                                           #
+    #    <-- dSl = -cr/num_train                                                #
+    # Sl -----------                                                            #
+    #               -                                                           #
+    #                -               <-- dSc = -np.ones(Sc.shape)/num_train     #  
+    #                 --> Sc = Sl*cr -----------> loss = -np.sum(Sc)/num_train  #
+    #                -                                                          #
+    #               -                                                           #
+    #             cr = (np.array([y]).T == np.arange(num_classes))              #
+    #___________________________________________________________________________#
+    # 5. Merge the computations                                                 #
+    #                                                                           #
+    # Finally, we can merge the computations above to reach a simple form of    #
+    # the gradient of the Softmax loss. Note that S = Se*(1/D) we have:         #
+    #                                                                           #
+    #       dS = -(1/S)*(cr/num_train)                                          #
+    #                                                                           #
+    # ==>                                                                       #
+    #                                                                           #
+    #      dSe = -(1/D)*(1/S)*(cr/num_train)                                    #
+    #            +((1/(D*D))*Se*(1/S)*(cr/num_train)).dot(C.T)                  # 
+    #                                                                           #
+    #          = -(1/Se)*(cr/num_train)+((1/D)*(cr/num_train)).dot(C.T)         #
+    #                                                                           #     
+    #          = -(1/Se)*(cr/num_train)+(1/D)/num_train                         #
+    #                                                                           #
+    # ==>                                                                       #
+    #                                                                           #
+    #       df = Se*dSe                                                         #
+    #                                                                           #
+    #          = (Se/D-cr)/num_train                                            #
+    #                                                                           #
+    #          = (S-cr)/num_train                                               #
+    #                                                                           #
+    #############################################################################
+    ds2 = (S-(np.array([y]).T == np.arange(C)))/N
+    db2 = np.sum(ds2, 0)
+    dW2 = 2*reg*W2+(f1_relu.T).dot(ds2)
+    df1 = f1_0*(ds2.dot(W2.T))
+    db1 = np.sum(df1, 0)    
+    dW1 = 2*reg*W1+(X.T).dot(df1)
+      
+    grads['W1'] = dW1
+    grads['b1'] = db1
+    grads['W2'] = dW2
+    grads['b2'] = db2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -142,14 +269,13 @@ class TwoLayerNet(object):
     val_acc_history = []
 
     for it in xrange(num_iters):
-      X_batch = None
-      y_batch = None
-
       #########################################################################
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      Sample_Index = np.random.choice(num_train, batch_size)
+      X_batch = X[Sample_Index, :]
+      y_batch = y[Sample_Index]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -164,7 +290,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] -= learning_rate*grads['W1']
+      self.params['b1'] -= learning_rate*grads['b1']
+      self.params['W2'] -= learning_rate*grads['W2']
+      self.params['b2'] -= learning_rate*grads['b2']
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -204,12 +333,14 @@ class TwoLayerNet(object):
       the elements of X. For all i, y_pred[i] = c means that X[i] is predicted
       to have class c, where 0 <= c < C.
     """
-    y_pred = None
-
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    f1 = X.dot(W1)+b1
+    f1_relu = f1*(f1 > 0)
+    y_pred = np.argmax(f1_relu.dot(W2)+b2, 1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
