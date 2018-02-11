@@ -347,4 +347,243 @@ class TwoLayerNet(object):
 
     return y_pred
 
+  def loss_dropout(self, X, y=None, reg=0.0, dropout=0.5):
+    """
+    Compute the loss and gradients for a two layer fully connected neural
+    network  with dropout.
 
+    Inputs:
+    - X: Input data of shape (N, D). Each X[i] is a training sample.
+    - y: Vector of training labels. y[i] is the label for X[i], and each y[i] is
+      an integer in the range 0 <= y[i] < C. This parameter is optional; if it
+      is not passed then we only return scores, and if it is passed then we
+      instead return the loss and gradients.
+    - reg: Regularization strength.
+    - dropout: The rate of dropout.
+
+    Returns:
+    If y is None, return a matrix scores of shape (N, C) where scores[i, c] is
+    the score for class c on input X[i].
+
+    If y is not None, instead return a tuple of:
+    - loss: Loss (data loss and regularization loss) for this batch of training
+      samples.
+    - grads: Dictionary mapping parameter names to gradients of those parameters
+      with respect to the loss function; has the same keys as self.params.
+    """
+    W1, b1 = self.params['W1'], self.params['b1']
+    W2, b2 = self.params['W2'], self.params['b2']
+    N, D = X.shape
+    C = b2.shape[0]
+    
+    s1 = X.dot(W1)
+    f1 = s1+b1
+    
+    # Add dropout
+    f1_0 = (f1 > 0)*(np.random.rand(*f1.shape) < dropout)/dropout
+    
+    f1_relu = f1*f1_0
+    s2 = f1_relu.dot(W2)
+    
+    scores = s2+b2
+    
+    if y is None:
+      return scores
+    
+    S = np.exp(scores)
+    S /= np.array([np.sum(S, 1)]).T
+    loss = reg*(np.sum(W1 * W1)+np.sum(W2 * W2))-np.sum(np.log(S[list(range(N)), y]))/N
+    
+    grads = {}
+    
+    ds2 = (S-(np.array([y]).T == np.arange(C)))/N
+    db2 = np.sum(ds2, 0)
+    dW2 = 2*reg*W2+(f1_relu.T).dot(ds2)
+    df1 = f1_0*(ds2.dot(W2.T))
+    db1 = np.sum(df1, 0)    
+    dW1 = 2*reg*W1+(X.T).dot(df1)
+      
+    grads['W1'] = dW1
+    grads['b1'] = db1
+    grads['W2'] = dW2
+    grads['b2'] = db2
+    
+    return loss, grads
+ 
+  def train_dropout(self, X, y, X_val, y_val,
+                    learning_rate=1e-3, learning_rate_decay=0.95,
+                    reg=5e-6, num_iters=100,
+                    batch_size=200, dropout=0.5, verbose=False):
+    """
+    Train the network using dropout and SGD.
+    
+    Inputs:
+    - X: A numpy array of shape (N, D) giving training data.
+    - y: A numpy array f shape (N,) giving training labels; y[i] = c means that
+      X[i] has label c, where 0 <= c < C.
+    - X_val: A numpy array of shape (N_val, D) giving validation data.
+    - y_val: A numpy array of shape (N_val,) giving validation labels.
+    - learning_rate: Scalar giving learning rate for optimization.
+    - learning_rate_decay: Scalar giving factor used to decay the learning rate
+      after each epoch.
+    - reg: Scalar giving regularization strength.
+    - num_iters: Number of steps to take when optimizing.
+    - batch_size: Number of training examples to use per step.
+    - dropout: The rate of dropout.
+    - verbose: boolean; if true print progress during optimization.
+    """
+    
+    num_train = X.shape[0]
+    iterations_per_epoch = max(num_train / batch_size, 1)
+
+    # Use SGD to optimize the parameters in self.model
+    loss_history = []
+    train_acc_history = []
+    val_acc_history = []
+
+    for it in xrange(num_iters):
+      #########################################################################
+      # TODO: Create a random minibatch of training data and labels, storing  #
+      # them in X_batch and y_batch respectively.                             #
+      #########################################################################
+      Sample_Index = np.random.choice(num_train, batch_size)
+      X_batch = X[Sample_Index, :]
+      y_batch = y[Sample_Index]
+      #########################################################################
+      #                             END OF YOUR CODE                          #
+      #########################################################################
+
+      # Compute loss and gradients using the current minibatch
+      loss, grads = self.loss_dropout(X_batch, y=y_batch, reg=reg, dropout=dropout)
+      loss_history.append(loss)
+
+      #########################################################################
+      # TODO: Use the gradients in the grads dictionary to update the         #
+      # parameters of the network (stored in the dictionary self.params)      #
+      # using stochastic gradient descent. You'll need to use the gradients   #
+      # stored in the grads dictionary defined above.                         #
+      #########################################################################
+      self.params['W1'] -= learning_rate*grads['W1']
+      self.params['b1'] -= learning_rate*grads['b1']
+      self.params['W2'] -= learning_rate*grads['W2']
+      self.params['b2'] -= learning_rate*grads['b2']
+      #########################################################################
+      #                             END OF YOUR CODE                          #
+      #########################################################################
+
+      if verbose and it % 100 == 0:
+        print('iteration %d / %d: loss %f' % (it, num_iters, loss))
+
+      # Every epoch, check train and val accuracy and decay learning rate.
+      if it % iterations_per_epoch == 0:
+        # Check accuracy
+        train_acc = (self.predict(X_batch) == y_batch).mean()
+        val_acc = (self.predict(X_val) == y_val).mean()
+        train_acc_history.append(train_acc)
+        val_acc_history.append(val_acc)
+
+        # Decay learning rate
+        learning_rate *= learning_rate_decay
+
+    return {
+      'loss_history': loss_history,
+      'train_acc_history': train_acc_history,
+      'val_acc_history': val_acc_history,
+    }
+
+  def train_dropout_momentum(self, X, y, X_val, y_val,
+                             learning_rate=1e-3, learning_rate_decay=0.95, mu=0.9,
+                             reg=5e-6, num_iters=100,
+                             batch_size=200, dropout=0.5, verbose=False):
+    """
+    Train the network using dropout and SGD with momentum.
+    
+    Inputs:
+    - X: A numpy array of shape (N, D) giving training data.
+    - y: A numpy array f shape (N,) giving training labels; y[i] = c means that
+      X[i] has label c, where 0 <= c < C.
+    - X_val: A numpy array of shape (N_val, D) giving validation data.
+    - y_val: A numpy array of shape (N_val,) giving validation labels.
+    - learning_rate: Scalar giving learning rate for optimization.
+    - learning_rate_decay: Scalar giving factor used to decay the learning rate
+      after each epoch.
+    - mu: The momentum.
+    - reg: Scalar giving regularization strength.
+    - num_iters: Number of steps to take when optimizing.
+    - batch_size: Number of training examples to use per step.
+    - dropout: The rate of dropout.
+    - verbose: boolean; if true print progress during optimization.
+    """
+    
+    num_train = X.shape[0]
+    iterations_per_epoch = max(num_train / batch_size, 1)
+
+    # Use SGD to optimize the parameters in self.model
+    loss_history = []
+    train_acc_history = []
+    val_acc_history = []
+    
+    # Initialize the velocity
+    v_W1 = 0.0
+    v_b1 = 0.0
+    v_W2 = 0.0
+    v_b2 = 0.0
+    
+    for it in xrange(num_iters):
+      #########################################################################
+      # TODO: Create a random minibatch of training data and labels, storing  #
+      # them in X_batch and y_batch respectively.                             #
+      #########################################################################
+      Sample_Index = np.random.choice(num_train, batch_size)
+      X_batch = X[Sample_Index, :]
+      y_batch = y[Sample_Index]
+      #########################################################################
+      #                             END OF YOUR CODE                          #
+      #########################################################################
+
+      # Compute loss and gradients using the current minibatch
+      loss, grads = self.loss_dropout(X_batch, y=y_batch, reg=reg, dropout=dropout)
+      loss_history.append(loss)
+
+      #########################################################################
+      # TODO: Use the gradients in the grads dictionary to update the         #
+      # parameters of the network (stored in the dictionary self.params)      #
+      # using stochastic gradient descent. You'll need to use the gradients   #
+      # stored in the grads dictionary defined above.                         #
+      #########################################################################
+      
+      # Update velocity
+      v_W1 = mu*v_W1-learning_rate*grads['W1']
+      v_b1 = mu*v_b1-learning_rate*grads['b1']
+      v_W2 = mu*v_W2-learning_rate*grads['W2']
+      v_b2 = mu*v_b2-learning_rate*grads['b2']
+      
+      # Update parameters
+      self.params['W1'] += v_W1
+      self.params['b1'] += v_b1
+      self.params['W2'] += v_W2
+      self.params['b2'] += v_b2
+      #########################################################################
+      #                             END OF YOUR CODE                          #
+      #########################################################################
+
+      if verbose and it % 100 == 0:
+        print('iteration %d / %d: loss %f' % (it, num_iters, loss))
+
+      # Every epoch, check train and val accuracy and decay learning rate.
+      if it % iterations_per_epoch == 0:
+        # Check accuracy
+        train_acc = (self.predict(X_batch) == y_batch).mean()
+        val_acc = (self.predict(X_val) == y_val).mean()
+        train_acc_history.append(train_acc)
+        val_acc_history.append(val_acc)
+
+        # Decay learning rate
+        learning_rate *= learning_rate_decay
+
+    return {
+      'loss_history': loss_history,
+      'train_acc_history': train_acc_history,
+      'val_acc_history': val_acc_history,
+    }
+    
