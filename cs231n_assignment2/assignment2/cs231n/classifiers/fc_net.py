@@ -180,19 +180,29 @@ class FullyConnectedNet(object):
         # The 1st layer
         self.params['W1'] = weight_scale * np.random.randn(input_dim, hidden_dims[0])
         self.params['b1'] = np.zeros(hidden_dims[0])
+        
+        if self.use_batchnorm:
+            self.params['gamma1'] = np.ones(hidden_dims[0])
+            self.params['beta1'] = np.zeros(hidden_dims[0])
+        
         # Middle layers
         l = 1
         while l < (self.num_layers-1):
             num = str(l+1)
+            
             self.params['W'+num] = weight_scale * np.random.randn(hidden_dims[l-1], hidden_dims[l])
             self.params['b'+num] = np.zeros(hidden_dims[l])
+            
+            if self.use_batchnorm:
+                self.params['gamma'+num] = np.ones(hidden_dims[l])
+                self.params['beta'+num] = np.zeros(hidden_dims[l])
+            
             l += 1
+        
         # The last layer
         num = str(l+1)
         self.params['W'+num] = weight_scale * np.random.randn(hidden_dims[l-1], num_classes)
-        self.params['b'+num] = np.zeros(num_classes)
-        
-        
+        self.params['b'+num] = np.zeros(num_classes)        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -253,23 +263,38 @@ class FullyConnectedNet(object):
         # The 1st layer
         data, cache = affine_forward(X, self.params['W1'], self.params['b1'])
         cache_layers['affine1'] = cache
+        
+        if self.use_batchnorm:
+            data, cache = batchnorm_forward(data, self.params['gamma1'], self.params['beta1'], bn_param[0])
+            cache_layers['batchnorm1'] = cache
+            
         data, cache = relu_forward(data)
         cache_layers['relu1'] = cache
+        
         if self.use_dropout:
             data, cache = dropout_forward(data, self.dropout_param)
             cache_layers['drop1'] = cache
+            
         # Middle layers
         l = 2
         while l < self.num_layers:
             num = str(l)
+            
             data, cache = affine_forward(data, self.params['W'+num], self.params['b'+num])
             cache_layers['affine'+num]=cache
+            
+            if self.use_batchnorm:
+                data, cache = batchnorm_forward(data, self.params['gamma'+num], self.params['beta'+num], bn_param[l-1])
+                cache_layers['batchnorm'+num] = cache
+            
             data, cache = relu_forward(data)
             cache_layers['relu'+num]=cache
+            
             if self.use_dropout:
                 data, cache = dropout_forward(data, self.dropout_param)
                 cache_layers['drop'+num] = cache
             l += 1
+        
         # The last layer
         num = str(l)
         scores, cache = affine_forward(data, self.params['W'+num], self.params['b'+num])
