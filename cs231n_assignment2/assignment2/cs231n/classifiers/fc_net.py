@@ -265,7 +265,7 @@ class FullyConnectedNet(object):
         cache_layers['affine1'] = cache
         
         if self.use_batchnorm:
-            data, cache = batchnorm_forward(data, self.params['gamma1'], self.params['beta1'], bn_param[0])
+            data, cache = batchnorm_forward(data, self.params['gamma1'], self.params['beta1'], self.bn_params[0])
             cache_layers['batchnorm1'] = cache
             
         data, cache = relu_forward(data)
@@ -284,7 +284,7 @@ class FullyConnectedNet(object):
             cache_layers['affine'+num]=cache
             
             if self.use_batchnorm:
-                data, cache = batchnorm_forward(data, self.params['gamma'+num], self.params['beta'+num], bn_param[l-1])
+                data, cache = batchnorm_forward(data, self.params['gamma'+num], self.params['beta'+num], self.bn_params[l-1])
                 cache_layers['batchnorm'+num] = cache
             
             data, cache = relu_forward(data)
@@ -332,11 +332,19 @@ class FullyConnectedNet(object):
         while l > 0:
             num = str(l)
             loss += 0.5*self.reg*np.sum(self.params['W'+num]**2)
+            
             dp = df
             if self.use_dropout:
                 dp = dropout_backward(df, cache_layers['drop'+num])
+                
             dr = relu_backward(dp, cache_layers['relu'+num])
-            df, dW, grads['b'+num] = affine_backward(dr, cache_layers['affine'+num])
+            
+            db = dr
+            if self.use_batchnorm:
+                db, grads['gamma'+num], grads['beta'+num] = batchnorm_backward_alt(dr, cache_layers['batchnorm'+num])
+            
+            df, dW, grads['b'+num] = affine_backward(db, cache_layers['affine'+num])
+            
             grads['W'+num] = dW+self.reg*self.params['W'+num]
             l -= 1
         
