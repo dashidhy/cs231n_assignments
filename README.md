@@ -2,15 +2,13 @@
 Here I take some notes about some of my ideas that I think may be useful in my future programming.
 # Assignment 1
 ## Q1: K-Nearest Neighbor Classifier
-In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first,** decompose the final distance matrix**, and second, **vectorlize the computing process with matrix multiplication and broadcast sums.**
+In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first, **decompose the final distance matrix,** and second, **vectorlize the computing process with matrix multiplication and broadcast sums.**
 
 Consider each element of the final distance matrix: 
-<div align=center><img src="https://latex.codecogs.com/png.latex?%24%24%20%5Cbegin%7Baligned%7D%20dist%5Bi%2C%20j%5D%20%26%20%3D%20%5Csum_k%20%28X%5Bi%2Ck%5D-self.X%5C_train%5Bj%2Ck%5D%29%5E2%20%5C%5C%20%5C%5C%20%26%20%3D%20%5Csum_k%20X%5E2%5Bi%2Ck%5D&plus;self.X%5C_train%5E2%5Bj%2Ck%5D-2*X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%20%5Cend%7Baligned%7D%20%24%24"/></div>
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dist%5Bi%2C%20j%5D%20%26%20%3D%20%5Csum_k%20%28X%5Bi%2Ck%5D-self.X%5C_train%5Bj%2Ck%5D%29%5E2%20%5C%5C%20%5C%5C%20%26%20%3D%20%5Csum_k%28X%5E2%5Bi%2Ck%5D&plus;self.X%5C_train%5E2%5Bj%2Ck%5D-2*X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
 In this way, we can decompose each element of the dist matrix into three terms. Each of the terms can be vectorlized into a Numpy form:
-<center>
-<a href="https://www.codecogs.com/eqnedit.php?latex=$$&space;\begin{aligned}&space;\sum_k&space;X^2[i,k]&space;&\to&space;np.array([np.sum(np.square(X),&space;1)]).T&space;\\&space;\\&space;\sum_k&space;X\_train^2[j,k]&space;&\to&space;np.sum(np.square(self.X\_train),&space;1)&space;\\&space;\\&space;\sum_k&space;X[i,k]*self.X\_train[j,k]&space;&\to&space;X[i,k]*self.X\_train^T[k,j]&space;\to&space;X.dot(self.X\_train.T)&space;\end{aligned}&space;$$" target="_blank"><img src="https://latex.codecogs.com/gif.latex?$$&space;\begin{aligned}&space;\sum_k&space;X^2[i,k]&space;&\to&space;np.array([np.sum(np.square(X),&space;1)]).T&space;\\&space;\\&space;\sum_k&space;X\_train^2[j,k]&space;&\to&space;np.sum(np.square(self.X\_train),&space;1)&space;\\&space;\\&space;\sum_k&space;X[i,k]*self.X\_train[j,k]&space;&\to&space;X[i,k]*self.X\_train^T[k,j]&space;\to&space;X.dot(self.X\_train.T)&space;\end{aligned}&space;$$" title="$$ \begin{aligned} \sum_k X^2[i,k] &\to np.array([np.sum(np.square(X), 1)]).T \\ \\ \sum_k X\_train^2[j,k] &\to np.sum(np.square(self.X\_train), 1) \\ \\ \sum_k X[i,k]*self.X\_train[j,k] &\to X[i,k]*self.X\_train^T[k,j] \to X.dot(self.X\_train.T) \end{aligned} $$" /></a>
-</center>
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20%5Csum_k%20X%5E2%5Bi%2Ck%5D%20%26%5Cto%20np.array%28%5Bnp.sum%28np.square%28X%29%2C%201%29%5D%29.T%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5C_train%5E2%5Bj%2Ck%5D%20%26%5Cto%20np.sum%28np.square%28self.X%5C_train%29%2C%201%29%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%20%26%5Cto%20X%5Bi%2Ck%5D*self.X%5C_train.T%5Bk%2Cj%5D%20%5Cto%20X.dot%28self.X%5C_train.T%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
 Thus, the fully vectorlized L2 distance code is something like the code below:
 
