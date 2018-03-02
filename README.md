@@ -1,13 +1,19 @@
 # Some tips of cs231n spring 2017 assignments
+
 Here I take some notes about some of my ideas that I think may be useful in my future programming.
+
 # Assignment 1
+
 ## Q1: K-Nearest Neighbor Classifier
+
 In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first, **decompose the final distance matrix,** and second, **vectorlize the computing process with matrix multiplication and broadcast sums.**
 
 Consider each element of the final distance matrix: 
+
 <div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dist%5Bi%2C%20j%5D%20%26%20%3D%20%5Csum_k%20%28X%5Bi%2Ck%5D-self.X%5C_train%5Bj%2Ck%5D%29%5E2%20%5C%5C%20%5C%5C%20%26%20%3D%20%5Csum_k%28X%5E2%5Bi%2Ck%5D&plus;self.X%5C_train%5E2%5Bj%2Ck%5D-2*X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
 In this way, we can decompose each element of the dist matrix into three terms. Each of the terms can be vectorlized into a Numpy form:
+
 <div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20%5Csum_k%20X%5E2%5Bi%2Ck%5D%20%26%5Cto%20np.array%28%5Bnp.sum%28np.square%28X%29%2C%201%29%5D%29.T%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5C_train%5E2%5Bj%2Ck%5D%20%26%5Cto%20np.sum%28np.square%28self.X%5C_train%29%2C%201%29%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%20%26%5Cto%20X%5Bi%2Ck%5D*self.X%5C_train.T%5Bk%2Cj%5D%20%5Cto%20X.dot%28self.X%5C_train.T%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
 Thus, the fully vectorlized L2 distance code is something like the code below:
@@ -40,10 +46,13 @@ def compute_distances_no_loops(self, X):
     #########################################################################
     return dists
 ```
+
 ## Q2: Training a Support Vector Machine
+
 At the first time I did this homework, it really took me a long time to figure out the way of vectorlizing the computation of the gradient of the weight matrix. However, when I reviewed this problem again after finishing the Softmax classifier, with the intuition of computation graph and back propagation I found it's easy to reach the final expressions in my code. Here are the steps:
 
 First stage:
+
 ```    
 X -----------                                               
              -                                              
@@ -54,6 +63,7 @@ X -----------
 W -----------                                               
   <---- dW = X.T.dot(dS)      
 ```
+
 Second stage:
 
 ```
@@ -77,7 +87,9 @@ mask_y              np.ones((num_classes, num_classes))
 = 
 (np.array([y]).T == np.arange(num_classes))
 ```
+
 Final stage:
+
 ```
     <---- dS_d = dS_h = S_0
 S_d -----------
@@ -91,8 +103,11 @@ S_d -----------
                                             -
        S_0 = (S_h > 0)/num_train -----------
 ```
+
 Thus, merge the computation graphs together and then simplify the expressions, we get:
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dW%20%26%20%3D%20X.T.dot%28S%5C_0%29-X.T.dot%28np.array%28%5Bnp.sum%28S%5C_0%2C%201%29%5D%29.T*mask%5C_y%29%20%5C%5C%20%26%3D%20X.T.dot%28S%5C_0%29-np.dot%28X.T*np.sum%28S%5C_0%2C%201%29%2C%20mask%5C_y%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
+
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dW%20%26%20%3D%20X.T.dot%28S%5C_0%29-X.T.dot%28np.array%28%5Bnp.sum%28S%5C_0%2C%201%29%5D%29.T*mask%5C_y%29%20%5C%5C%20%5C%5C%20%26%3D%20X.T.dot%28S%5C_0%29-np.dot%28X.T*np.sum%28S%5C_0%2C%201%29%2C%20mask%5C_y%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
+
 A possible original code is the one below:
 
 ```Python
