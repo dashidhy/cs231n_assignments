@@ -162,6 +162,7 @@ def svm_loss_vectorized(W, X, y, reg):
 ```
 
 <br/>
+
 ## Q3: Implement a Softmax classifier
 
 Here I give my idea of how to reach a fully vectorized Softmax classifier. Note that the code is actually from Q4, which also gives ideas of the forward and backward data flow a simple fully connected neural network.
@@ -366,12 +367,14 @@ def loss(self, X, y=None, reg=0.0):
     return loss, grads
 ```
 
-<br>
+<br/>
+
 ## Q4: Two-Layer Neural Network
 
 It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://github.com/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>.
 
 <br/>
+
 ## Q5: Higher Level Representations: Image Features
 
 Quite like Q4, nothing more to say.
