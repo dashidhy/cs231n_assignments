@@ -71,9 +71,9 @@ S ----------------------------------------------------------------------------
       -                                 --> Sy_bc = Sy.dot(ones_c) -----------                            
      -                                 -                           <---- dSy_bc = -dS_d  
     -                                 -
-   -               ones_c -----------                                     
-  -                = 
-mask_y             np.ones((num_classes, num_classes))
+   -                ones_c -----------                                     
+  -                 = 
+mask_y              np.ones((num_classes, num_classes))
 = 
 (np.array([y]).T == np.arange(num_classes))
 ```
