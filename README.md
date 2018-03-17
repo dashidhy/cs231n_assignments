@@ -2,9 +2,11 @@
 
 Here I take some notes about some of my ideas that I think may be useful in my future programming.
 
+---
+
 # Assignment 1
 
-## Q1: K-Nearest Neighbor Classifier
+## Q1: k-Nearest Neighbor Classifier
 
 In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first, **decompose the final distance matrix,** and second, **vectorlize the computing process with matrix multiplication and broadcast sums.**
 
@@ -12,13 +14,11 @@ Consider each element of the final distance matrix:
 
 <div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dist%5Bi%2C%20j%5D%20%26%20%3D%20%5Csum_k%20%28X%5Bi%2Ck%5D-self.X%5C_train%5Bj%2Ck%5D%29%5E2%20%5C%5C%20%5C%5C%20%26%20%3D%20%5Csum_k%28X%5E2%5Bi%2Ck%5D&plus;self.X%5C_train%5E2%5Bj%2Ck%5D-2*X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
-<br/>
-In this way, we can decompose each element of the dist matrix into three terms. Each of the terms can be vectorlized into a Numpy form:
+<br/>In this way, we can decompose each element of the dist matrix into three terms. Each of the terms can be vectorlized into a Numpy form:
 
 <div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20%5Csum_k%20X%5E2%5Bi%2Ck%5D%20%26%5Cto%20np.array%28%5Bnp.sum%28np.square%28X%29%2C%201%29%5D%29.T%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5C_train%5E2%5Bj%2Ck%5D%20%26%5Cto%20np.sum%28np.square%28self.X%5C_train%29%2C%201%29%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%20%26%5Cto%20X%5Bi%2Ck%5D*self.X%5C_train.T%5Bk%2Cj%5D%20%5Cto%20X.dot%28self.X%5C_train.T%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
-<br/>
-Thus, the fully vectorlized L2 distance code is something like the code below:
+<br/>Thus, the fully vectorlized L2 distance code is something like the code below:
 
 ```Python
 def compute_distances_no_loops(self, X):
@@ -49,7 +49,7 @@ def compute_distances_no_loops(self, X):
     return dists
 ```
 
-<br/>
+---
 
 ## Q2: Training a Support Vector Machine
 
@@ -68,8 +68,7 @@ W -----------
   <---- dW = X.T.dot(dS)      
 ```
 
-<br/>
-Second stage:
+<br/>Second stage:
 
 ```
    <-- dS = dS_d                                  
@@ -93,8 +92,7 @@ mask_y              np.ones((num_classes, num_classes))
 (np.array([y]).T == np.arange(num_classes))
 ```
 
-<br/>
-Final stage:
+<br/>Final stage:
 
 ```
     <---- dS_d = dS_h = S_0
@@ -110,13 +108,11 @@ S_d -----------
        S_0 = (S_h > 0)/num_train -----------
 ```
 
-<br/>
-Thus, merge the computation graphs together and then simplify the expressions, we get:
+<br/>Thus, merge the computation graphs together and then simplify the expressions, we get:
 
 <div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dW%20%26%20%3D%20X.T.dot%28S%5C_0%29-X.T.dot%28np.array%28%5Bnp.sum%28S%5C_0%2C%201%29%5D%29.T*mask%5C_y%29%20%5C%5C%20%5C%5C%20%26%3D%20X.T.dot%28S%5C_0%29-np.dot%28X.T*np.sum%28S%5C_0%2C%201%29%2C%20mask%5C_y%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
 
-<br/>
-A possible original code is the one below:
+<br/>A possible original code is the one below:
 
 ```Python
 def svm_loss_vectorized(W, X, y, reg):
@@ -161,7 +157,7 @@ def svm_loss_vectorized(W, X, y, reg):
   return loss, dW
 ```
 
-<br/>
+---
 
 ## Q3: Implement a Softmax classifier
 
@@ -367,14 +363,30 @@ def loss(self, X, y=None, reg=0.0):
     return loss, grads
 ```
 
-<br/>
+---
 
 ## Q4: Two-Layer Neural Network
 
 It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://github.com/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>.
 
-<br/>
+---
 
 ## Q5: Higher Level Representations: Image Features
 
 Quite like Q4, nothing more to say.
+
+---
+
+# Assignment 2
+
+
+
+## Q1: Fully-connected Neural Network 
+
+Nothing tricky. Just be careful when coding to keep a right data flow in the network. Proper indents, blank lines and annotations will help a lot.
+
+---
+
+## Q2: Batch Normalization
+
+Waiting to be completed...
