@@ -49,8 +49,6 @@ def compute_distances_no_loops(self, X):
     return dists
 ```
 
----
-
 ## Q2: Training a Support Vector Machine
 
 At the first time I did this homework, it really took me a long time to figure out the way of vectorlizing the computation of the gradient of the weight matrix. However, when I reviewed this problem again after finishing the Softmax classifier, with the intuition of computation graph and back propagation I found it's easy to reach the final expressions in my code. Here are the steps:
@@ -156,8 +154,6 @@ def svm_loss_vectorized(W, X, y, reg):
 
   return loss, dW
 ```
-
----
 
 ## Q3: Implement a Softmax classifier
 
@@ -363,13 +359,11 @@ def loss(self, X, y=None, reg=0.0):
     return loss, grads
 ```
 
----
-
 ## Q4: Two-Layer Neural Network
 
 It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://github.com/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>.
 
----
+
 
 ## Q5: Higher Level Representations: Image Features
 
@@ -379,14 +373,101 @@ Quite like Q4, nothing more to say.
 
 # Assignment 2
 
-
-
 ## Q1: Fully-connected Neural Network 
 
-Nothing tricky. Just be careful when coding to keep a right data flow in the network. Proper indents, blank lines and annotations will help a lot.
-
----
+Nothing is tricky. Just be careful when coding to keep a right data flow in the network. Proper indents, blank lines and annotations will help a lot.
 
 ## Q2: Batch Normalization
 
-Waiting to be completed...
+According to the comment, it's possible to write batchnorm_backward_alt in a single 80-character line. However, though I have tried my best to comepress the computation and my code, I still need 4 lines. Here is my code. It's 0.4 times faster than the non-optimized one.
+
+```Python
+
+def batchnorm_backward_alt(dout, cache):
+    """
+    Alternative backward pass for batch normalization.
+
+    For this implementation you should work out the derivatives for the batch
+    normalizaton backward pass on paper and simplify as much as possible. You
+    should be able to derive a simple expression for the backward pass.
+
+    Note: This implementation should expect to receive the same cache variable
+    as batchnorm_backward, but might not use all of the values in the cache.
+
+    Inputs / outputs: Same as batchnorm_backward
+    """
+    ###########################################################################
+    # TODO: Implement the backward pass for batch normalization. Store the    #
+    # results in the dx, dgamma, and dbeta variables.                         #
+    #                                                                         #
+    # After computing the gradient with respect to the centered inputs, you   #
+    # should be able to compute gradients with respect to the inputs in a     #
+    # single statement; our implementation fits on a single 80-character line.#
+    ###########################################################################
+    gamma, norm, scale = cache
+    dbeta = np.sum(dout, 0)
+    dgamma = np.sum(dout*norm, 0)
+    dcenter = dout*gamma/scale
+    dx = dcenter-np.mean(dcenter, 0)-np.mean(dcenter*norm, 0)*norm
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+
+    return dx, dgamma, dbeta
+```
+
+## Q3: Dropout
+
+Easy.
+
+## Q4: Convolutional Networks
+
+Just follow the instruction. The fast conv layers are speeded up by Cython back-end and you don't have to care about it.
+
+## Q5: PyTorch / Tensorflow on CIFAR-10
+
+I choose PyTorch. It's friendly for beginners to handle the basic functions. The most tricky part is how to design a good network that works well on CIFAR-10. As a beginner it's hard to have much insight of CNN structures and designed your own network. Since it's time consuming to do a lot of experiments, I recommend you to refer to some well developed structures like VGG, GoogLeNet, and ResNet. I build a mini VGG net that stacks 3x3 conv layers and it obtains ~80% accuracy both on validation set (81.8%, 818/1000) and test set (78.58%, 7858/10000). Here is the Pytorch code, optimizer and hyperparameters are picked according to the <a href="https://arxiv.org/pdf/1409.1556.pdf" target="_blank">the original paper of VGG</a>.
+
+```Python
+dhy_mini_VGG = nn.Sequential(
+
+    # 1st module
+    nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(2),
+    
+    # 2nd module
+    nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(2),
+    
+    # 3rd module
+    nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1),
+    nn.ReLU(inplace=True),
+    nn.MaxPool2d(2),
+    
+    Flatten(),
+    
+    # FC layers
+    nn.Linear(2048, 2048),
+    nn.ReLU(inplace=True),
+    nn.Dropout(inplace=True),
+    nn.Linear(2048, 1024),
+    nn.ReLU(inplace=True),
+    nn.Dropout(inplace=True),
+    nn.Linear(1024, 10)
+    
+)
+
+model = dhy_mini_VGG.type(gpu_dtype)
+loss_fn = nn.CrossEntropyLoss().type(gpu_dtype)
+optimizer = optim.SGD(model.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e-4)
+```
