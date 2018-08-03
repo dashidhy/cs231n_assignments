@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# large datasets
+/cs231n_assignment3/assignment3/cs231n/datasets/
+!/cs231n_assignment3/assignment3/cs231n/datasets/*.sh
