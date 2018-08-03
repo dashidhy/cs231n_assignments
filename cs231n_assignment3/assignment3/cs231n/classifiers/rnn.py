@@ -115,7 +115,7 @@ class CaptioningRNN(object):
         # Weight and bias for the hidden-to-vocab transformation.
         W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
 
-        loss, grads = 0.0, {}
+        grads = {}
         ############################################################################
         # TODO: Implement the forward and backward passes for the CaptioningRNN.   #
         # In the forward pass you will need to do the following:                   #
@@ -137,7 +137,21 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
-        pass
+        
+        # forward pass
+        h0 = features.dot(W_proj) + b_proj
+        vect_in, cache_in = word_embedding_forward(captions_in, W_embed)
+        if self.cell_type == 'rnn':
+            h, cache_h = rnn_forward(vect_in, h0, Wx, Wh, b)
+        h_v, cache_h_v = temporal_affine_forward(h, W_vocab, b_vocab)
+        loss, dh_v = temporal_softmax_loss(h_v, captions_out, mask)
+
+        # backporp
+        dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dh_v, cache_h_v)
+        din, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_h)
+        grads['W_embed'] = word_embedding_backward(din, cache_in)
+        grads['W_proj'] = features.T.dot(dh0)
+        grads['b_proj'] = np.sum(dh0, axis=0)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -178,28 +192,38 @@ class CaptioningRNN(object):
         Wx, Wh, b = self.params['Wx'], self.params['Wh'], self.params['b']
         W_vocab, b_vocab = self.params['W_vocab'], self.params['b_vocab']
 
-        ###########################################################################
-        # TODO: Implement test-time sampling for the model. You will need to      #
-        # initialize the hidden state of the RNN by applying the learned affine   #
-        # transform to the input image features. The first word that you feed to  #
-        # the RNN should be the <START> token; its value is stored in the         #
-        # variable self._start. At each timestep you will need to do to:          #
-        # (1) Embed the previous word using the learned word embeddings           #
-        # (2) Make an RNN step using the previous hidden state and the embedded   #
-        #     current word to get the next hidden state.                          #
-        # (3) Apply the learned affine transformation to the next hidden state to #
-        #     get scores for all words in the vocabulary                          #
-        # (4) Select the word with the highest score as the next word, writing it #
-        #     to the appropriate slot in the captions variable                    #
-        #                                                                         #
-        # For simplicity, you do not need to stop generating after an <END> token #
-        # is sampled, but you can if you want to.                                 #
-        #                                                                         #
-        # HINT: You will not be able to use the rnn_forward or lstm_forward       #
-        # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
-        # a loop.                                                                 #
-        ###########################################################################
-        pass
+        ############################################################################
+        # TODO: Implement test-time sampling for the model. You will need to       #
+        # initialize the hidden state of the RNN by applying the learned affine    #
+        # transform to the input image features. The first word that you feed to   #
+        # the RNN should be the <START> token; its value is stored in the          #
+        # variable self._start. At each timestep you will need to do to:           #
+        # (1) Embed the previous word using the learned word embeddings            #
+        # (2) Make an RNN step using the previous hidden state and the embedded    #
+        #     current word to get the next hidden state.                           #
+        # (3) Apply the learned affine transformation to the next hidden state to  #
+        #     get scores for all words in the vocabulary                           #
+        # (4) Select the word with the highest score as the next word, writing it  #
+        #     to the appropriate slot in the captions variable                     #
+        #                                                                          #
+        # For simplicity, you do not need to stop generating after an <END> token  #
+        # is sampled, but you can if you want to.                                  #
+        #                                                                          #
+        # HINT: You will not be able to use the rnn_forward or lstm_forward        #
+        # functions; you'll need to call rnn_step_forward or lstm_step_forward in  #
+        # a loop.                                                                  #
+        ############################################################################
+        h0 = features.dot(W_proj) + b_proj
+        x, _ = word_embedding_forward((self._start * np.ones([N, 1])).astype(np.int32), W_embed)
+        x = x.reshape([x.shape[0], x.shape[2]])
+        h, _ = rnn_step_forward(x, h0, Wx, Wh, b)
+        for i in range(max_length):
+            h_v = h.dot(W_vocab) + b_vocab
+            captions[:, i] = np.argmax(h_v, axis=1)
+            x, _ = word_embedding_forward(captions[:, i].reshape([N, 1]).astype(np.int32), W_embed)
+            x = x.reshape([x.shape[0], x.shape[2]])
+            h, _ = rnn_step_forward(x, h, Wx, Wh, b)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
