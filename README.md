@@ -361,7 +361,7 @@ def loss(self, X, y=None, reg=0.0):
 
 ## Q4: Two-Layer Neural Network
 
-It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://github.com/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>.
+It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://nbviewer.jupyter.org/github/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>. Concisely, adding dropout and implementing advanced optimizer may help improve the results.
 
 
 
