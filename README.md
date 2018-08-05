@@ -471,3 +471,11 @@ model = dhy_mini_VGG.type(gpu_dtype)
 loss_fn = nn.CrossEntropyLoss().type(gpu_dtype)
 optimizer = optim.SGD(model.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e-4)
 ```
+
+---
+
+# Assignment 3
+
+This assignment basically help you to learning implementing simple tools. Following the instructions in the notebooks and refering to course slides and official documentations will help you get good results and make progress. 
+
+Bonus parts are waiting to be done.
