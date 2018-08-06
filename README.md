@@ -476,6 +476,6 @@ optimizer = optim.SGD(model.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e
 
 # Assignment 3
 
-This assignment basically help you to learning implementing simple tools. Following the instructions in the notebooks and refering to course slides and official documentations will help you get good results and make progress. 
+This assignment basically help you to learning implementing simple tools. Following the instructions in the notebooks and refering to course slides and official documentations will help you get good results and make progress. If you are confused by how a transposed conv layer works, <a href="https://towardsdatascience.com/up-sampling-with-transposed-convolution-9ae4f2df52d0" target="_blank">this article may answer your questions</a>.
 
 Bonus parts are waiting to be done.
