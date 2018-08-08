@@ -12,11 +12,11 @@ In the KNN problem, the most tricky part is how to fully vectorlize the computat
 
 Consider each element of the final distance matrix: 
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dist%5Bi%2C%20j%5D%20%26%20%3D%20%5Csum_k%20%28X%5Bi%2Ck%5D-self.X%5C_train%5Bj%2Ck%5D%29%5E2%20%5C%5C%20%5C%5C%20%26%20%3D%20%5Csum_k%28X%5E2%5Bi%2Ck%5D&plus;self.X%5C_train%5E2%5Bj%2Ck%5D-2*X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f1.svg?sanitize=true"/></div>
 
 <br/>In this way, we can decompose each element of the dist matrix into three terms. Each of the terms can be vectorlized into a Numpy form:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20%5Csum_k%20X%5E2%5Bi%2Ck%5D%20%26%5Cto%20np.array%28%5Bnp.sum%28np.square%28X%29%2C%201%29%5D%29.T%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5C_train%5E2%5Bj%2Ck%5D%20%26%5Cto%20np.sum%28np.square%28self.X%5C_train%29%2C%201%29%20%5C%5C%20%5C%5C%20%5Csum_k%20X%5Bi%2Ck%5D*self.X%5C_train%5Bj%2Ck%5D%20%26%5Cto%20X%5Bi%2Ck%5D*self.X%5C_train.T%5Bk%2Cj%5D%20%5Cto%20X.dot%28self.X%5C_train.T%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f2.svg?sanitize=true"/></div>
 
 <br/>Thus, the fully vectorlized L2 distance code is something like the code below:
 
@@ -55,11 +55,11 @@ At the first time I did this homework, it really took me a long time to figure o
 
 Total derivative of a matrix variable:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20df%3Dtr%20%5CBigg%20%28%20%5Cfrac%7B%5Cpartial%20f%7D%7B%5Cpartial%20X%7D%5ET%20dX%20%5CBigg%20%29%2C%20%5C%3B%5C%3Bwhere%5C%3Bf%5C%3Bis%5C%3Ba%5C%3Bscalar%5C%3Bfunction."/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f3.svg?sanitize=true"/></div>
 
 <br/>Trace tricks:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20%26tr%28s%29%20%3D%20s%2C%20%5C%3B%5C%3Bwhere%5C%3Bs%5C%3Bis%5C%3Ba%5C%3Bscalar%3B%5C%5C%20%26tr%28A%5ET%29%20%3D%20tr%28A%29%3B%20%5C%5C%20%26tr%28A%20%5Cpm%20B%29%20%3D%20tr%28A%29%20%5Cpm%20tr%28B%29%3B%5C%5C%20%26tr%28AB%29%20%3D%20tr%28BA%29%3B%20%5C%5C%20%26tr%28A%5ET%28B%20%5Codot%20C%29%29%20%3D%20tr%28%28A%20%5Codot%20B%29%5ET%20C%29%2C%5C%3B%5C%3Bwhere%5C%3BA%2C%20B%2C%20and%5C%3BC%5C%3Bhave%5C%3Bthe%5C%3Bsame%5C%3Bshape.%20%5Cend%7Baligned%7D"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f4.svg?sanitize=true"/></div>
 
 <br/>Computation graph:
 
@@ -112,15 +112,19 @@ S_d -----------
 
 From the forward graph, we have:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20S_%7Bloss%7D%20%26%3D%20%5BXW%20-%20%28XW%20%5Codot%20mask_y%291%5E%7BCxC%7D&plus;1%5E%7BNxC%7D%5D%20%5Codot%20S_0%20%5C%5C%20%5C%5C%20loss%20%26%3D%20tr%281%5E%7BCxN%7DS_%7Bloss%7D%29%20-%201%20%5Cend%7Baligned%7D"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f5.svg?sanitize=true"/></div>
 
 <br/>Take derivatives and use trace tricks, we get:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20%5Cfrac%7B%5Cpartial%20loss%7D%7B%5Cpartial%20S_%7Bloss%7D%7D%20%26%3D%201%5E%7BNxC%7D%2C%5C%3B%5C%3B%20dS_%7Bloss%7D%20%3D%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5Codot%20S_0%20%5C%5C%20%5C%5C%20dloss%20%26%3D%20tr%20%5CBigg%20%28%20%5Cfrac%7B%5Cpartial%20loss%7D%7B%5Cpartial%20S_%7Bloss%7D%7D%5ET%20dS_%7Bloss%7D%20%5CBigg%20%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%20%28%201%5E%7BCxN%7D%5C%7B%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5Codot%20S_0%20%5C%7D%20%5CBigg%20%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%28%20%281%5E%7BNxC%7D%20%5Codot%20S_0%29%5ET%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%28S_0%5ET%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%28S_0%201%5E%7BCxC%7D%29%5ET%28XdW%20%5Codot%20mask_y%29%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%28S_0%201%5E%7BCxC%7D%20%5Codot%20mask_y%29%5ET%20XdW%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%5BX%5ET%28S_0%201%5E%7BCxC%7D%20%5Codot%20mask_y%29%5D%5ET%20dW%5CBigg%29%20%5Cend%7Baligned%7D"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f6.svg?sanitize=true"/></div>
 
-<br/>Thus, merge the computation graphs together and then simplify the expressions, we get:
+Trus, we finally get the gradient:
 
-<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%24%24%20%5Cbegin%7Baligned%7D%20dW%20%26%20%3D%20X.T.dot%28S%5C_0%29-X.T.dot%28np.array%28%5Bnp.sum%28S%5C_0%2C%201%29%5D%29.T*mask%5C_y%29%20%5C%5C%20%5C%5C%20%26%3D%20X.T.dot%28S%5C_0%29-np.dot%28X.T*np.sum%28S%5C_0%2C%201%29%2C%20mask%5C_y%29%20%5Cend%7Baligned%7D%20%24%24"/></div>
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f7.svg?sanitize=true"/></div>
+
+<br/>Write it in Numpy form:
+
+<div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f8.svg?sanitize=true"/></div>
 
 <br/>A possible original code is the one below:
 
