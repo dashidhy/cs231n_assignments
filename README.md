@@ -1,14 +1,16 @@
 # Some tips of cs231n spring 2017 assignments
 
-Here I take some notes about some of my ideas that I think may be useful in my future programming.
+Here I take some notes of ideas that are tricky and useful.
 
 ---
+
+<br/>
 
 # Assignment 1
 
 ## Q1: k-Nearest Neighbor Classifier
 
-In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first, **decompose the final distance matrix,** and second, **vectorlize the computing process with matrix multiplication and broadcast sums.**
+In the KNN problem, the most tricky part is how to fully vectorlize the computation of l2 distance. The solution is that first, decompose the final distance matrix, and second, vectorlize the computing process with matrix multiplication and broadcast sums.
 
 Consider each element of the final distance matrix: 
 
@@ -18,7 +20,7 @@ Consider each element of the final distance matrix:
 
 <div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f2.svg?sanitize=true"/></div>
 
-<br/>Thus, the fully vectorlized L2 distance code is something like the code below:
+<br/>Thus, the fully vectorlized L2 distance code:
 
 ```Python
 def compute_distances_no_loops(self, X):
@@ -48,6 +50,8 @@ def compute_distances_no_loops(self, X):
     #########################################################################
     return dists
 ```
+
+<br/>
 
 ## Q2: Training a Support Vector Machine
 
@@ -118,7 +122,7 @@ From the forward graph, we have:
 
 <div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f6.svg?sanitize=true"/></div>
 
-Trus, we finally get the gradient:
+<br/>Trus, we finally get the gradient:
 
 <div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f7.svg?sanitize=true"/></div>
 
@@ -126,7 +130,7 @@ Trus, we finally get the gradient:
 
 <div align=center><img src="https://github.com/dashidhy/cs231n_assignments/raw/master/figure/f8.svg?sanitize=true"/></div>
 
-<br/>A possible original code is the one below:
+<br/>A possible code:
 
 ```Python
 def svm_loss_vectorized(W, X, y, reg):
@@ -170,6 +174,8 @@ def svm_loss_vectorized(W, X, y, reg):
 
   return loss, dW
 ```
+
+<br/>
 
 ## Q3: Implement a Softmax classifier
 
@@ -375,11 +381,13 @@ def loss(self, X, y=None, reg=0.0):
     return loss, grads
 ```
 
+<br/>
+
 ## Q4: Two-Layer Neural Network
 
 It's hard to conclute all the important ideas in this part, so for details of training and tuning the network, please see <a href="https://nbviewer.jupyter.org/github/dashidhy/cs231n_assignments/blob/master/cs231n_assignment1/assignment1/two_layer_net.ipynb" target="_blank">my notebook of this question</a>. Concisely, adding dropout and implementing advanced optimizer may help improve the results.
 
-
+<br/>
 
 ## Q5: Higher Level Representations: Image Features
 
@@ -387,11 +395,16 @@ Quite like Q4, nothing more to say.
 
 ---
 
+<br/>
+
+
 # Assignment 2
 
 ## Q1: Fully-connected Neural Network 
 
 Nothing is tricky. Just be careful when coding to keep a right data flow in the network. Proper indents, blank lines and annotations will help a lot.
+
+<br/>
 
 ## Q2: Batch Normalization
 
@@ -432,13 +445,19 @@ def batchnorm_backward_alt(dout, cache):
     return dx, dgamma, dbeta
 ```
 
+<br/>
+
 ## Q3: Dropout
 
 Easy.
 
+<br/>
+
 ## Q4: Convolutional Networks
 
 Just follow the instruction. The fast conv layers are speeded up by Cython back-end and you don't have to care about it.
+
+<br/>
 
 ## Q5: PyTorch / Tensorflow on CIFAR-10
 
@@ -489,6 +508,8 @@ optimizer = optim.SGD(model.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e
 ```
 
 ---
+
+<br/>
 
 # Assignment 3
 
