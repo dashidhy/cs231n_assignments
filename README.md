@@ -51,9 +51,17 @@ def compute_distances_no_loops(self, X):
 
 ## Q2: Training a Support Vector Machine
 
-At the first time I did this homework, it really took me a long time to figure out the way of vectorlizing the computation of the gradient of the weight matrix. However, when I reviewed this problem again after finishing the Softmax classifier, with the intuition of computation graph and back propagation I found it's easy to reach the final expressions in my code. Here are the steps:
+At the first time I did this homework, it really took me a long time to figure out how to vectorlize the gradient computation. Thanks to  <a href="https://zhuanlan.zhihu.com/p/24709748" target="_blank">this article </a> from Zhihu, the computation becomes much easier by using matrix calculus methods. 
 
-First stage:
+Total derivative of a matrix variable:
+
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20df%3Dtr%20%5CBigg%20%28%20%5Cfrac%7B%5Cpartial%20f%7D%7B%5Cpartial%20X%7D%5ET%20dX%20%5CBigg%20%29%2C%20%5C%3B%5C%3Bwhere%5C%3Bf%5C%3Bis%5C%3Ba%5C%3Bscalar%5C%3Bfunction."/></div>
+
+<br/>Trace tricks:
+
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20%26tr%28s%29%20%3D%20s%2C%20%5C%3B%5C%3Bwhere%5C%3Bs%5C%3Bis%5C%3Ba%5C%3Bscalar%3B%5C%5C%20%26tr%28A%5ET%29%20%3D%20tr%28A%29%3B%20%5C%5C%20%26tr%28A%20%5Cpm%20B%29%20%3D%20tr%28A%29%20%5Cpm%20tr%28B%29%3B%5C%5C%20%26tr%28AB%29%20%3D%20tr%28BA%29%3B%20%5C%5C%20%26tr%28A%5ET%28B%20%5Codot%20C%29%29%20%3D%20tr%28%28A%20%5Codot%20B%29%5ET%20C%29%2C%5C%3B%5C%3Bwhere%5C%3BA%2C%20B%2C%20and%5C%3BC%5C%3Bhave%5C%3Bthe%5C%3Bsame%5C%3Bshape.%20%5Cend%7Baligned%7D"/></div>
+
+<br/>Computation graph:
 
 ```    
 X -----------                                               
@@ -65,8 +73,6 @@ X -----------
 W -----------                                               
   <---- dW = X.T.dot(dS)      
 ```
-
-<br/>Second stage:
 
 ```
    <-- dS = dS_d                                  
@@ -90,8 +96,6 @@ mask_y              np.ones((num_classes, num_classes))
 (np.array([y]).T == np.arange(num_classes))
 ```
 
-<br/>Final stage:
-
 ```
     <---- dS_d = dS_h = S_0
 S_d -----------
@@ -105,6 +109,14 @@ S_d -----------
                                             -
        S_0 = (S_h > 0)/num_train -----------
 ```
+
+From the forward graph, we have:
+
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20S_%7Bloss%7D%20%26%3D%20%5BXW%20-%20%28XW%20%5Codot%20mask_y%291%5E%7BCxC%7D&plus;1%5E%7BNxC%7D%5D%20%5Codot%20S_0%20%5C%5C%20%5C%5C%20loss%20%26%3D%20tr%281%5E%7BCxN%7DS_%7Bloss%7D%29%20-%201%20%5Cend%7Baligned%7D"/></div>
+
+<br/>Take derivatives and use trace tricks, we get:
+
+<div align=center/><img /></div>
 
 <br/>Thus, merge the computation graphs together and then simplify the expressions, we get:
 
