@@ -63,33 +63,33 @@ Total derivative of a matrix variable:
 
 <br/>Computation graph:
 
-```    
-X -----------                                               
+``` 
+X -----------
              -                                              
               -                 <---- dS = ...              
                --> S = X.dot(W) ----------->                      
               -                                             
              -                                              
-W -----------                                               
-  <---- dW = X.T.dot(dS)      
+W -----------
+  <---- dW = X.T.dot(dS) 
 ```
 
 ```
-   <-- dS = dS_d                                  
+   <-- dS = dS_d 
 S ----------------------------------------------------------------------------
    -                                                                          -
-    - <---- dS = dSy*mask_y                                                    -       
-     -         = -np.array([np.sum(dS_d, 1)]).T*mask_y                          -                  
+    - <---- dS = dSy*mask_y                                                    -
+     -         = -np.array([np.sum(dS_d, 1)]).T*mask_y                          - 
       -                                                                          -                  <----dS_d = ...
        -                                                                          --> S_d = S-Sy_bc ----------->
         -                  <---- dSy = dSy_bc.dot(ones_c.T)                      -
          --> Sy = S*mask_y -----------  = -dS_d.dot(ones_c)                     -             
         -                             -                                        -                            
        -                               -                                      -
-      -                                 --> Sy_bc = Sy.dot(ones_c) -----------                            
-     -                                 -                           <---- dSy_bc = -dS_d  
+      -                                 --> Sy_bc = Sy.dot(ones_c) -----------
+     -                                 -                           <---- dSy_bc = -dS_d
     -                                 -
-   -                ones_c -----------                                     
+   -                ones_c -----------
   -                 = 
 mask_y              np.ones((num_classes, num_classes))
 = 
@@ -116,7 +116,7 @@ From the forward graph, we have:
 
 <br/>Take derivatives and use trace tricks, we get:
 
-<div align=center/><img /></div>
+<div align=center><img src="https://latex.codecogs.com/svg.latex?%5Cfn_cm%20%5Cbegin%7Baligned%7D%20%5Cfrac%7B%5Cpartial%20loss%7D%7B%5Cpartial%20S_%7Bloss%7D%7D%20%26%3D%201%5E%7BNxC%7D%2C%5C%3B%5C%3B%20dS_%7Bloss%7D%20%3D%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5Codot%20S_0%20%5C%5C%20%5C%5C%20dloss%20%26%3D%20tr%20%5CBigg%20%28%20%5Cfrac%7B%5Cpartial%20loss%7D%7B%5Cpartial%20S_%7Bloss%7D%7D%5ET%20dS_%7Bloss%7D%20%5CBigg%20%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%20%28%201%5E%7BCxN%7D%5C%7B%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5Codot%20S_0%20%5C%7D%20%5CBigg%20%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%28%20%281%5E%7BNxC%7D%20%5Codot%20S_0%29%5ET%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%20%5CBigg%28S_0%5ET%20%5BXdW%20-%20%28XdW%20%5Codot%20mask_y%291%5E%7BCxC%7D%5D%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%28S_0%201%5E%7BCxC%7D%29%5ET%28XdW%20%5Codot%20mask_y%29%20%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%28S_0%201%5E%7BCxC%7D%20%5Codot%20mask_y%29%5ET%20XdW%5CBigg%29%20%5C%5C%20%5C%5C%20%26%3D%20tr%5CBigg%28%28X%5ETS_0%29%5ET%20dW%20%5CBigg%29-%20tr%5CBigg%28%20%5BX%5ET%28S_0%201%5E%7BCxC%7D%20%5Codot%20mask_y%29%5D%5ET%20dW%5CBigg%29%20%5Cend%7Baligned%7D"/></div>
 
 <br/>Thus, merge the computation graphs together and then simplify the expressions, we get:
 
@@ -244,14 +244,14 @@ def loss(self, X, y=None, reg=0.0):
     #############################################################################
     
     ##### BP structures #########################################################
-    #############################################################################             
+    #############################################################################
     # Matrix multiplication:                                                    #
     #                                                                           #
     #                 <---- dA = dC.dot(B.T)                                    #
     #               A -----------                                               #
     #                            -                                              #
     #                             -                 <---- dC = ...              #
-    #                              --> C = A.dot(B) ----------->                #      
+    #                              --> C = A.dot(B) ----------->                #
     #                             -                                             #
     #                            -                                              #
     #               B -----------                                               #
@@ -260,8 +260,8 @@ def loss(self, X, y=None, reg=0.0):
     #############################################################################
     # Bias plus (including broadcast):                                          #
     #                                                                           #
-    #                      <-- dS = df                                          #                            
-    #        S = X.dot(W) -----------                                           #                                         
+    #                      <-- dS = df                                          #
+    #        S = X.dot(W) -----------                                           #
     #                                 -                                         #
     #                                  -            <-- df = ...                # 
     #                                   --> f = S+b ----------->                #
@@ -322,7 +322,7 @@ def loss(self, X, y=None, reg=0.0):
     #    <-- dSl = -cr/num_train                                                #
     # Sl -----------                                                            #
     #               -                                                           #
-    #                -               <-- dSc = -np.ones(Sc.shape)/num_train     #  
+    #                -               <-- dSc = -np.ones(Sc.shape)/num_train     #
     #                 --> Sc = Sl*cr -----------> loss = -np.sum(Sc)/num_train  #
     #                -                                                          #
     #               -                                                           #
@@ -341,7 +341,7 @@ def loss(self, X, y=None, reg=0.0):
     #            +((1/(D*D))*Se*(1/S)*(cr/num_train)).dot(C.T)                  # 
     #                                                                           #
     #          = -(1/Se)*(cr/num_train)+((1/D)*(cr/num_train)).dot(C.T)         #
-    #                                                                           #     
+    #                                                                           #
     #          = -(1/Se)*(cr/num_train)+(1/D)/num_train                         #
     #                                                                           #
     # ==>                                                                       #
@@ -357,7 +357,7 @@ def loss(self, X, y=None, reg=0.0):
     db2 = np.sum(ds2, 0)
     dW2 = 2*reg*W2+(f1_relu.T).dot(ds2)
     df1 = f1_0*(ds2.dot(W2.T))
-    db1 = np.sum(df1, 0)    
+    db1 = np.sum(df1, 0)
     dW1 = 2*reg*W1+(X.T).dot(df1)
       
     grads['W1'] = dW1
