@@ -233,7 +233,7 @@ class CaptioningRNN(object):
             if self.cell_type == 'rnn':
                 h, _ = rnn_step_forward(x, h, Wx, Wh, b)
             else:
-                h, c, _ = lstm_step_forward(x, h, 0, Wx, Wh, b)
+                h, c, _ = lstm_step_forward(x, h, c, Wx, Wh, b)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
