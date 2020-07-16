@@ -23,32 +23,16 @@ Consider each element of the final distance matrix:
 <br/>Thus, the fully vectorlized L2 distance code:
 
 ```Python
-def compute_distances_no_loops(self, X):
-    """
-    Compute the distance between each test point in X and each training point
-    in self.X_train using no explicit loops.
+class KNearestNeighbor(object):
+    """ a kNN classifier with L2 distance """
 
-    Input / Output: Same as compute_distances_two_loops
-    """ 
-    #########################################################################
-    # TODO:                                                                 #
-    # Compute the l2 distance between all test points and all training      #
-    # points without using any explicit loops, and store the result in      #
-    # dists.                                                                #
-    #                                                                       #
-    # You should implement this function using only basic array operations; #
-    # in particular you should not use functions from scipy.                #
-    #                                                                       #
-    # HINT: Try to formulate the l2 distance using matrix multiplication    #
-    #       and two broadcast sums.                                         #
-    #########################################################################
-    X_temp = np.array([np.sum(np.square(X), 1)]).T
-    X_trian_temp = np.sum(np.square(self.X_train), 1)
-    dists = (-2*X.dot(self.X_train.T)+X_temp)+X_trian_temp
-    #########################################################################
-    #                         END OF YOUR CODE                              #
-    #########################################################################
-    return dists
+    def train(self, X, y):
+        self.X_train = X
+        self.y_train = y
+        self.X_train_square = np.sum(np.square(self.X_train), axis=1) # pre-calculate
+    
+    def compute_distances_no_loops(self, X):
+        return np.sum(np.square(X), axis=1, keepdims=True) - 2.0 * X.dot(self.X_train.T) + self.X_train_square
 ```
 
 <br/>
