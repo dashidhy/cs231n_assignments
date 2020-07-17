@@ -185,32 +185,34 @@ Variables:
 
 ```Python
 def softmax_loss_vectorized(W, X, y, reg):
-  """
-  Softmax loss function, vectorized version.
+    """
+    Softmax loss function, vectorized version.
 
-  Inputs and outputs are the same as softmax_loss_naive.
-  """
+    Inputs and outputs are the same as softmax_loss_naive.
+    """
 
-  #############################################################################
-  # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
-  # Store the loss in loss and the gradient in dW. If you are not careful     #
-  # here, it is easy to run into numeric instability. Don't forget the        #
-  # regularization!                                                           #
-  #############################################################################
-  num_train = X.shape[0]
-  num_classes = W.shape[1]
-  S = np.exp(X.dot(W))
-  S /= np.array([np.sum(S, 1)]).T
-  loss = reg*np.sum(W * W)-np.sum(np.log(S[list(range(num_train)), y]))/num_train
-  
-  dW = 2*reg*W
-  dW += (X.T).dot(S)/num_train
-  dW -= (X.T).dot(np.array([y]).T == np.arange(num_classes))/num_train
-  #############################################################################
-  #                          END OF YOUR CODE                                 #
-  #############################################################################
+    #############################################################################
+    # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
+    # Store the loss in loss and the gradient in dW. If you are not careful     #
+    # here, it is easy to run into numeric instability. Don't forget the        #
+    # regularization!                                                           #
+    #############################################################################
+    num_train = X.shape[0]
+    num_classes = W.shape[1]
+    
+    P = np.exp(X.dot(W))
+    P /= np.sum(P, axis=1, keepdims=True)
+    Y = (y.reshape(-1, 1) == np.arange(num_classes)).astype(np.float64)
+    
+    loss = reg * np.sum(np.square(W)) - np.sum(Y * np.log(P)) / num_train
+    dS = (P - Y) / num_train
+    dW = 2 * reg * W + X.T.dot(dS)
+    #dX = dS.dot(W.T)
+    #############################################################################
+    #                          END OF YOUR CODE                                 #
+    #############################################################################
 
-  return loss, dW
+    return loss, dW
 ```
 
 <br/>
